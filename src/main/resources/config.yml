@@ -1,6 +1,5 @@
-eventRequests:
+eventHooks:
   telegramEndpoint: https://example.com
 
-defaults:
-  defaultMessage: Send a request to a {0} about your join to {1}
-
+templates:
+  defaultMessage: Send join info about ${player} to ${endpoint}
