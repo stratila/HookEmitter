@@ -128,7 +128,12 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
                                           + targetPlayerUuid
                                           + "): "
                                           + message);
-
+                              targetPlayer.sendMessage(
+                                  Component.text(
+                                      "HookEmitter: Join message for "
+                                          + targetPlayer.getName()
+                                          + " set to: "
+                                          + message));
                               return Command.SINGLE_SUCCESS;
                             })))
         .build();
