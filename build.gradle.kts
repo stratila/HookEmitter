@@ -1,10 +1,17 @@
 plugins {
     id("java")
     id("com.gradleup.shadow") version "9.3.0"
+    id("idea")
 }
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
+}
+
+idea {
+    module {
+        isDownloadSources = true
+    }
 }
 
 dependencies {
