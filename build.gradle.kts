@@ -2,6 +2,7 @@ plugins {
     id("java")
     id("com.gradleup.shadow") version "9.3.0"
     id("idea")
+    id("com.diffplug.spotless") version "8.1.0"
 }
 
 repositories {
@@ -11,6 +12,12 @@ repositories {
 idea {
     module {
         isDownloadSources = true
+    }
+}
+
+spotless {
+    java {
+        googleJavaFormat("1.28.0")
     }
 }
 
