@@ -33,9 +33,12 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
         .registerEventHandler(
             LifecycleEvents.COMMANDS,
             commands -> {
-              LiteralCommandNode<CommandSourceStack> joinMsgCommand =
-                  createSetJoinMsgCommand("join_msg");
-              commands.registrar().register(joinMsgCommand);
+              LiteralCommandNode<CommandSourceStack> setJoinMsgCommand =
+                  createSetJoinMsgCommand("set_join_msg");
+              LiteralCommandNode<CommandSourceStack> resetJoinMsgCommand =
+                  createResetJoinMsgCommand("reset_join_msg");
+              commands.registrar().register(setJoinMsgCommand);
+              commands.registrar().register(resetJoinMsgCommand);
             });
     saveResource("config.yml", false);
   }
@@ -80,10 +83,14 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
   }
 
   private String buildFormattedJoinMessage(@NotNull Player player, String endpoint) {
-    String defaultMessage = getConfig().getString("templates.defaultMessage");
+
+    String message = getConfig().getString("templates.defaultMessage");
+    String customMessage = getConfig().getString("playerMessages." + player.getUniqueId());
+    if (customMessage != null) message = customMessage;
+
     Map<String, String> values = Map.of("player", player.getName(), "endpoint", endpoint);
 
-    return StringSubstitutor.replace(defaultMessage, values);
+    return StringSubstitutor.replace(message, values);
   }
 
   private String buildJSONJoinPayload(@NotNull Player player, String joinMessage) {
@@ -99,6 +106,33 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
     json.set("meta", meta);
 
     return json.toString();
+  }
+
+  public LiteralCommandNode<CommandSourceStack> createResetJoinMsgCommand(
+      final String commandName) {
+    return Commands.literal(commandName)
+        .then(
+            Commands.argument("target", ArgumentTypes.player())
+                .executes(
+                    ctx -> {
+                      final PlayerSelectorArgumentResolver playerSelector =
+                          ctx.getArgument("target", PlayerSelectorArgumentResolver.class);
+                      final Player targetPlayer =
+                          playerSelector.resolve(ctx.getSource()).getFirst();
+
+                      UUID targetPlayerUuid = targetPlayer.getUniqueId();
+
+                      getConfig().set("playerMessages." + targetPlayerUuid, null);
+                      saveConfig();
+
+                      getLogger()
+                          .log(
+                              Level.INFO,
+                              "HookEmitter: Reset custom message, using default one since now");
+
+                      return Command.SINGLE_SUCCESS;
+                    }))
+        .build();
   }
 
   public LiteralCommandNode<CommandSourceStack> createSetJoinMsgCommand(final String commandName) {
