@@ -1,6 +1,6 @@
 eventHooks:
-  joinEndpoint: https://example.com
-  quitEndpoint: https://example.com
+  joinEndpoint: null
+  quitEndpoint: null
 
 templates:
-  defaultMessage: Send join info about ${player} to ${endpoint}
+  defaultMessage: Default ${player}'s message to the people!
