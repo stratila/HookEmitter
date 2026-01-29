@@ -1,6 +1,6 @@
 name: HookEmitter
 version: 1.0.0
-main: io.stratila.hook.emitter.plugin.HookEmitterPlugin.java
+main: io.stratila.hook.emitter.plugin.HookEmitterPlugin
 description: The plugin for sending HTTP requests
 author: kastryula_larsa
 website: https://t.me/minecraft_is_life_our_server

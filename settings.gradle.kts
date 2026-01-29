@@ -1,1 +1,1 @@
-rootProject.name = "hookemitter"
+rootProject.name = "HookEmitter"
