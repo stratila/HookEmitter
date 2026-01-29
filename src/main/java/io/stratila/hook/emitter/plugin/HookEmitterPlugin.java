@@ -22,6 +22,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,17 +46,22 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
 
   @EventHandler
   public void onPlayerJoin(PlayerJoinEvent event) {
-    sendTelegramRequest(event);
+    sendJoinRequest(event);
   }
 
-  private void sendTelegramRequest(PlayerEvent event) {
-    String endpoint = getConfig().getString("eventHooks.telegramEndpoint");
+  @EventHandler
+  public void onPlayerQuit(PlayerQuitEvent event) {
+    sendQuitRequest(event);
+  }
+
+  private void sendJoinRequest(PlayerEvent event) {
+    String endpoint = getConfig().getString("eventHooks.joinEndpoint");
     if (endpoint == null) return;
 
     Player player = event.getPlayer();
 
     String formattedString = buildFormattedJoinMessage(player, endpoint);
-    String jsonPayload = buildJSONJoinPayload(player, formattedString);
+    String jsonPayload = buildJSONPayload(player, formattedString);
 
     AsyncHttpClient.postJson(endpoint, jsonPayload)
         .thenAccept(
@@ -69,10 +75,35 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
                             .log(
                                 Level.INFO,
                                 "Payload " + jsonPayload + " has been sent to " + endpoint);
-                        player.sendMessage(
-                            Component.text(
-                                "HookEmitter: Send request to a Telegram about "
-                                    + player.getName()));
+                      });
+            })
+        .exceptionally(
+            ex -> {
+              getLogger().log(Level.SEVERE, "Failed to call endpoint: " + endpoint, ex);
+              return null;
+            });
+  }
+
+  private void sendQuitRequest(PlayerEvent event) {
+    String endpoint = getConfig().getString("eventHooks.quitEndpoint");
+    if (endpoint == null) return;
+
+    Player player = event.getPlayer();
+
+    String jsonPayload = buildJSONPayload(player, null);
+
+    AsyncHttpClient.postJson(endpoint, jsonPayload)
+        .thenAccept(
+            response -> {
+              // Switch back to main thread if interacting with Bukkit
+              Bukkit.getScheduler()
+                  .runTask(
+                      this,
+                      () -> {
+                        getLogger()
+                            .log(
+                                Level.INFO,
+                                "Payload " + jsonPayload + " has been sent to " + endpoint);
                       });
             })
         .exceptionally(
@@ -93,7 +124,7 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
     return StringSubstitutor.replace(message, values);
   }
 
-  private String buildJSONJoinPayload(@NotNull Player player, String joinMessage) {
+  private String buildJSONPayload(@NotNull Player player, String joinMessage) {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode json = mapper.createObjectNode();
     ObjectNode target = mapper.createObjectNode();
@@ -101,7 +132,7 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
 
     target.put("name", player.getName());
     target.put("uuid", player.getUniqueId().toString());
-    meta.put("join_message", joinMessage);
+    meta.put("message", joinMessage);
     json.set("player", target);
     json.set("meta", meta);
 
