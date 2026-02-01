@@ -15,8 +15,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.commons.text.StringSubstitutor;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -151,6 +154,33 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
                       final Player targetPlayer =
                           playerSelector.resolve(ctx.getSource()).getFirst();
 
+                      final CommandSender sender =
+                          ctx.getSource().getSender(); // Retrieve the command sender
+                      final Entity executor =
+                          ctx.getSource()
+                              .getExecutor(); // Retrieve the command executor, which may or
+                      // may not be the same as the sender
+
+                      // Check whether the executor is a player, as you can only set a
+                      // player's flight speed
+                      if (!(executor instanceof Player player)) {
+                        // If a non-player tried to set their own flight speed
+                        sender.sendPlainMessage("Not a player");
+                        return Command.SINGLE_SUCCESS;
+                      }
+
+                      boolean editSelf = targetPlayer.getUniqueId().equals(executor.getUniqueId());
+                      boolean hasEditOthersPerm =
+                          sender.hasPermission("hookemitter" + ".join_msg.others");
+
+                      if (!editSelf && !hasEditOthersPerm) {
+                        sender.sendMessage(
+                            Component.text(
+                                    "You don't have permission to reset others' join messages.")
+                                .color(NamedTextColor.RED));
+                        return Command.SINGLE_SUCCESS;
+                      }
+
                       UUID targetPlayerUuid = targetPlayer.getUniqueId();
 
                       getConfig().set("playerMessages." + targetPlayerUuid, null);
@@ -178,6 +208,34 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
                                   ctx.getArgument("target", PlayerSelectorArgumentResolver.class);
                               final Player targetPlayer =
                                   playerSelector.resolve(ctx.getSource()).getFirst();
+
+                              final CommandSender sender =
+                                  ctx.getSource().getSender(); // Retrieve the command sender
+                              final Entity executor =
+                                  ctx.getSource()
+                                      .getExecutor(); // Retrieve the command executor, which may or
+                              // may not be the same as the sender
+
+                              // Check whether the executor is a player, as you can only set a
+                              // player's flight speed
+                              if (!(executor instanceof Player player)) {
+                                // If a non-player tried to set their own flight speed
+                                sender.sendPlainMessage("Not a player");
+                                return Command.SINGLE_SUCCESS;
+                              }
+
+                              boolean editSelf =
+                                  targetPlayer.getUniqueId().equals(executor.getUniqueId());
+                              boolean hasEditOthersPerm =
+                                  sender.hasPermission("hookemitter" + ".join_msg.others");
+
+                              if (!editSelf && !hasEditOthersPerm) {
+                                sender.sendMessage(
+                                    Component.text(
+                                            "You don't have permission to set others' join messages.")
+                                        .color(NamedTextColor.RED));
+                                return Command.SINGLE_SUCCESS;
+                              }
 
                               UUID targetPlayerUuid = targetPlayer.getUniqueId();
                               String message = StringArgumentType.getString(ctx, "message");
