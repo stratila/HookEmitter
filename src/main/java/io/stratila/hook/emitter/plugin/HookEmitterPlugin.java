@@ -31,7 +31,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 public class HookEmitterPlugin extends JavaPlugin implements Listener {
-  // Store active player sessions: player UUID -> session UUID
   private final Map<UUID, UUID> activeSessions = new ConcurrentHashMap<>();
 
   @Override
@@ -53,7 +52,7 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
 
   @EventHandler
   public void onPlayerJoin(PlayerJoinEvent event) {
-    // Generate and store session UUID for this player
+    // Generate and store session UUID for player on join
     UUID sessionId = UUID.randomUUID();
     activeSessions.put(event.getPlayer().getUniqueId(), sessionId);
 
@@ -62,8 +61,8 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
 
   @EventHandler
   public void onPlayerQuit(PlayerQuitEvent event) {
-    // Remove session UUID when player quits
     sendQuitRequest(event);
+    // Remove session UUID when player quits
     activeSessions.remove(event.getPlayer().getUniqueId());
   }
 
