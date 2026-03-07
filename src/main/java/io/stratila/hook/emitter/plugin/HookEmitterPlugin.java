@@ -13,6 +13,7 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import io.stratila.async.http.client.AsyncHttpClient;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -30,6 +31,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 public class HookEmitterPlugin extends JavaPlugin implements Listener {
+  // Store active player sessions: player UUID -> session UUID
+  private final Map<UUID, UUID> activeSessions = new ConcurrentHashMap<>();
+
   @Override
   public void onEnable() {
     Bukkit.getPluginManager().registerEvents(this, this);
@@ -49,12 +53,18 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
 
   @EventHandler
   public void onPlayerJoin(PlayerJoinEvent event) {
+    // Generate and store session UUID for this player
+    UUID sessionId = UUID.randomUUID();
+    activeSessions.put(event.getPlayer().getUniqueId(), sessionId);
+
     sendJoinRequest(event);
   }
 
   @EventHandler
   public void onPlayerQuit(PlayerQuitEvent event) {
+    // Remove session UUID when player quits
     sendQuitRequest(event);
+    activeSessions.remove(event.getPlayer().getUniqueId());
   }
 
   private void sendJoinRequest(PlayerEvent event) {
@@ -136,6 +146,7 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
     target.put("name", player.getName());
     target.put("uuid", player.getUniqueId().toString());
     meta.put("message", joinMessage);
+    meta.put("session_id", activeSessions.get(player.getUniqueId()).toString());
     json.set("player", target);
     json.set("meta", meta);
 
