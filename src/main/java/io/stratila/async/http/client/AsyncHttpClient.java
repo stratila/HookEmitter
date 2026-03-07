@@ -11,7 +11,12 @@ public class AsyncHttpClient {
   private static final HttpClient CLIENT = HttpClient.newHttpClient();
 
   public static CompletableFuture<String> get(String url) {
-    HttpRequest request = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
+    HttpRequest request =
+        HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .version(HttpClient.Version.HTTP_1_1)
+            .GET()
+            .build();
 
     return CLIENT
         .sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -22,6 +27,7 @@ public class AsyncHttpClient {
     HttpRequest request =
         HttpRequest.newBuilder()
             .uri(URI.create(url))
+            .version(HttpClient.Version.HTTP_1_1)
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(json))
             .build();
