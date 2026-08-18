@@ -11,6 +11,7 @@ import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import io.stratila.async.http.client.AsyncHttpClient;
+import io.stratila.async.http.client.OAuth2TokenManager;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,6 +33,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class HookEmitterPlugin extends JavaPlugin implements Listener {
   private final Map<UUID, UUID> activeSessions = new ConcurrentHashMap<>();
+  private OAuth2TokenManager tokenManager;
 
   @Override
   public void onEnable() {
@@ -48,6 +50,14 @@ public class HookEmitterPlugin extends JavaPlugin implements Listener {
               commands.registrar().register(resetJoinMsgCommand);
             });
     saveResource("config.yml", false);
+    tokenManager =
+        new OAuth2TokenManager(
+            getConfig().getString("auth.oauth2_url"),
+            getConfig().getString("auth.client_id"),
+            getConfig().getString("auth.client_secret"));
+
+    AsyncHttpClient.setTokenManager(tokenManager);
+    getLogger().info("OAuth2 configured");
   }
 
   @EventHandler

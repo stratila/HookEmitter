@@ -1,5 +1,5 @@
 name: HookEmitter
-version: 1.0.2
+version: 1.0.3
 main: io.stratila.hook.emitter.plugin.HookEmitterPlugin
 description: The plugin for sending HTTP requests
 author: kastryula_larsa

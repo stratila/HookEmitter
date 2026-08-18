@@ -2,5 +2,11 @@ eventHooks:
   joinEndpoint: null
   quitEndpoint: null
 
+
+auth:
+  oauth2_url: null
+  client_id: null
+  client_secret: null
+
 templates:
   defaultMessage: Default ${player}'s message to the people!
